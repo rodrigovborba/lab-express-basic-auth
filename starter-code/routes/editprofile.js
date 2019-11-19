@@ -5,36 +5,27 @@ const router = Router();
 const routeGuard = require('./../middleware/route-guard');
 const User = require('./../models/user');
 
-router.get('/:userId/editProfile', routeGuard, (req, res, next) => {
-    const userId = req.params.userId;
-    User.findById(userId)
-      .then(user => {
-        if (user === req.session.user) {
-          res.render('/editProfile', { user });
-        } else {
-          next(new Error('User has no permission to edit post.'));
-        }
+router.get("/", routeGuard, (req, res, next) => {
+    User.findById(req.session.user)
+      .then(profile => {
+          res.render("editProfile", { profile });
       })
       .catch(error => {
         next(error);
       });
   });
   
-  router.post('/:userId/editProfile', routeGuard, (req, res, next) => {
-    const userId = req.params.userId;
-  
-    User.findOneAndUpdate(
-      {
-        _id: userId,
-        username: req.session.user
-      }
-    )
-      .then(data => {
-        res.redirect(`/${userId}`);
+  router.post('/', routeGuard, (req, res, next) => {
+    //  mongoose.set('useFindAndModify', false);
+    User.findByIdAndUpdate(req.session.user, {
+        name: req.body.name
+      })
+      .then((user) => {
+        res.redirect("/profile");
       })
       .catch(error => {
         next(error);
       });
-  });
+   });
 
 module.exports = router;

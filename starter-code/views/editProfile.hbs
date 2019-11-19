@@ -1,7 +1,10 @@
-<h1>Edit Profile</h1>
-
-<form action="/{{user._id}}/editProfile" method="POST">
-  <textarea name="text" maxlength="140" placeholder="Insert text">{{ user.name }}</textarea>
-  {{!-- <input name="text" value={{post.text}} /> --}}
-  <button>Edit</button>
-</form>
+<h1>Edit your Profile</h1>
+  <strong>You are not allow to change your password</strong>
+{{#with profile}}
+<h2>Name: {{name}}</h2>
+  <form action="/editProfile" method="POST">
+    <label for="input-name">Name: </label>
+    <input type="text" id="input-name" name='name' placeholder="Your Name goes Here">
+    <button>Edit</button>
+  </form>
+{{/with}}
