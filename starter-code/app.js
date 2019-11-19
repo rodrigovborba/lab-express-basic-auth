@@ -8,7 +8,20 @@ const logger = require('morgan');
 const sassMiddleware = require('node-sass-middleware');
 const serveFavicon = require('serve-favicon');
 
+const mongoose = require('mongoose');
+const expressSession = require('express-session');
+const connectMongo = require('connect-mongo');
+const MongoStore = connectMongo(expressSession);
+const User = require('./models/user');
+
 const indexRouter = require('./routes/index');
+const signupRouter = require('./routes/signup');
+const signinRouter = require('./routes/signin');
+const signoutRouter = require('./routes/signout');
+const profileRouter = require('./routes/profile');
+const editProfile = require('./routes/editprofile');
+const main = require('./routes/main');
+const privateUser = require('./routes/private');
 
 const app = express();
 
@@ -29,7 +42,53 @@ app.use(sassMiddleware({
   sourceMap: true
 }));
 
+app.use(
+  expressSession({
+    secret: process.env.SESSION_SECRET,
+    resave: true,
+    saveUninitialized: false,
+    cookie: {
+      maxAge: 60 * 60 * 24 * 15,
+      sameSite: true,
+      httpOnly: true,
+      secure: process.env.NODE_ENV !== 'development'
+    },
+    store: new MongoStore({
+      mongooseConnection: mongoose.connection,
+      ttl: 60 * 60 * 24
+    })
+  })
+);
+
+app.use((req, res, next) => {
+  const userId = req.session.user;
+  if (userId) {
+    User.findById(userId)
+      .then(user => {
+        req.user = user;
+        // Set the user in the response locals, so it can be accessed from any view
+        res.locals.user = req.user;
+        // Go to the next middleware/controller
+        next();
+      })
+      .catch(error => {
+        next(error);
+      });
+  } else {
+    // If there isn't a userId saved in the session,
+    // go to the next middleware/controller
+    next();
+  }
+});
+
 app.use('/', indexRouter);
+app.use('/sign-up', signupRouter);
+app.use('/sign-in', signinRouter);
+app.use('/sign-out', signoutRouter);
+app.use('/main', main);
+app.use('/private', privateUser);
+app.use('/profile', profileRouter);
+app.use('/editprofile', editProfile);
 
 // Catch missing routes and forward to error handler
 app.use((req, res, next) => {

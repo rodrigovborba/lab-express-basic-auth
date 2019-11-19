@@ -1,0 +1,7 @@
+<h1>Edit Profile</h1>
+
+<form action="/{{user._id}}/editProfile" method="POST">
+  <textarea name="text" maxlength="140" placeholder="Insert text">{{ user.name }}</textarea>
+  {{!-- <input name="text" value={{post.text}} /> --}}
+  <button>Edit</button>
+</form>
